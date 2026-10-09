@@ -9,6 +9,9 @@ st.set_page_config(
 # Custom CSS จัดสไตล์ข้อความและการ์ดตั๋ว
 st.markdown(
     """
+    <!-- ดึงไลบรารี html2canvas สำหรับแปลง HTML เป็นรูปภาพ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
     .main-header {
         text-align: center;
@@ -34,7 +37,7 @@ st.markdown(
         margin-bottom: 8px;
     }
     
-    /* สไตล์ป้ายรายชื่อเพื่อนที่ถูกชวน (ใหญ่เบิ้ม + อ่านง่าย) */
+    /* สไตล์ป้ายรายชื่อเพื่อนที่ถูกชวน */
     .invitee-badge {
         display: inline-block;
         background-color: #E8F0FE;
@@ -86,6 +89,18 @@ st.markdown(
         text-align: center;
     }
     </style>
+    
+    <script>
+    function downloadTicket() {
+        const element = document.getElementById("capture-ticket");
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const link = document.createElement("a");
+            link.download = "hangout-pass.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    }
+    </script>
 """,
     unsafe_allow_html=True,
 )
@@ -120,7 +135,6 @@ if title and location:
             unsafe_allow_html=True,
         )
 
-        # สร้างป้ายชื่อใหญ่แบบสวยงาม
         badges_html = "".join(
             [f'<span class="invitee-badge">👤 {p}</span>' for p in people_list]
         )
@@ -163,18 +177,40 @@ if title and location:
     if "response" in st.session_state:
         res = st.session_state["response"]
 
+        # โซนตั๋วที่จะถูกแปลงเป็นรูปภาพ (id="capture-ticket")
         st.markdown(
             f"""
-        <div class="ticket-card" style="background: {res['color']};">
+        <div id="capture-ticket" class="ticket-card" style="background: {res['color']};">
             <div class="ticket-header">🎟️ HANGOUT PASS</div>
             <div class="ticket-body">📌 <b>หัวข้อ:</b> {title}</div>
             <div class="ticket-body">📍 <b>สถานที่:</b> {location}</div>
             <div class="ticket-body">👤 <b>ผู้ตอบรับ:</b> {res['name']}</div>
             <div class="ticket-status">{res['status']}</div>
-            <p style="font-size: 0.85rem; margin-top: 18px; opacity: 0.9;">
-                📸 แคปหน้าจอนี้ส่งให้ผู้เชิญในแชตได้เลย!
-            </p>
         </div>
+        """,
+            unsafe_allow_html=True,
+        )
+
+        # ปุ่มกดดาวน์โหลดรูปภาพบัตร
+        st.markdown(
+            """
+        <button onclick="downloadTicket()" style="
+            width: 100%;
+            background-color: #0084FF;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            margin-bottom: 15px;">
+            ⬇️ บันทึกรูปภาพบัตรลงเครื่อง
+        </button>
+        <p style="font-size: 0.85rem; text-align: center; opacity: 0.8;">
+            กดบันทึกรูปภาพ แล้วส่งรูปให้ผู้เชิญในแชตได้เลย!
+        </p>
         """,
             unsafe_allow_html=True,
         )
