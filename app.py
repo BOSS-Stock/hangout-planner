@@ -6,11 +6,11 @@ st.set_page_config(
     page_title="Hangout Planner", page_icon="🍻", layout="centered"
 )
 
-# Custom CSS จัดข้อความและ input ให้อยู่ตรงกลาง
+# Custom CSS จัดสไตล์ข้อความและช่องกรอกข้อมูล
 st.markdown(
     """
     <style>
-    /* จัด Title และ Header ให้อยู่ตรงกลาง */
+    /* จัด Title และ Header หลัก ให้อยู่ตรงกลาง */
     .main-header {
         text-align: center;
         font-size: 2.2rem;
@@ -19,6 +19,22 @@ st.markdown(
     }
     .center-text {
         text-align: center;
+    }
+    
+    /* สไตล์หัวข้อใหญ่เบิ้ม + ตัวหนา */
+    .section-title-center {
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 15px;
+        margin-bottom: 8px;
+    }
+    .section-title-left {
+        text-align: left;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 15px;
+        margin-bottom: 8px;
     }
     
     /* จัดข้อความในช่องกรอก 1 และ 2 ให้อยู่ตรงกลาง */
@@ -50,7 +66,7 @@ if title and location:
         unsafe_allow_html=True,
     )
     st.markdown(
-        f'<p class="center-text" style="font-size: 1.2rem;">📍 <b>สถานที่:</b> {location}</p>',
+        f'<p class="center-text" style="font-size: 1.3rem;">📍 <b>สถานที่:</b> {location}</p>',
         unsafe_allow_html=True,
     )
 
@@ -107,9 +123,9 @@ else:
         unsafe_allow_html=True,
     )
 
-    # 1. หัวข้อ (ตรงกลาง)
+    # 1. หัวข้อการนัดหมาย (ใหญ่เบิ้ม + ตัวหนา + ตรงกลาง)
     st.markdown(
-        "<p class='center-text' style='font-weight: 600; margin-bottom: 4px;'>1. หัวข้อการนัดหมาย</p>",
+        '<div class="section-title-center">หัวข้อการนัดหมาย</div>',
         unsafe_allow_html=True,
     )
     input_title = st.text_input(
@@ -120,9 +136,9 @@ else:
 
     st.write("")  # เว้นระยะ
 
-    # 2. สถานที่ (ตรงกลาง)
+    # 2. สถานที่ / ร้าน (ใหญ่เบิ้ม + ตัวหนา + ตรงกลาง)
     st.markdown(
-        "<p class='center-text' style='font-weight: 600; margin-bottom: 4px;'>2. สถานที่ / ร้าน</p>",
+        '<div class="section-title-center">สถานที่ / ร้าน</div>',
         unsafe_allow_html=True,
     )
     input_location = st.text_input(
@@ -133,8 +149,11 @@ else:
 
     st.divider()
 
-    # 3. รายชื่อผู้ถูกเชิญ (ชิดซ้าย + ปุ่มเพิ่มลิส)
-    st.markdown("### 3. รายชื่อผู้ถูกเชิญ")
+    # 3. รายชื่อผู้ถูกเชิญ (ใหญ่เบิ้ม + ตัวหนา + ชิดซ้าย)
+    st.markdown(
+        '<div class="section-title-left">รายชื่อผู้ถูกเชิญ</div>',
+        unsafe_allow_html=True,
+    )
 
     # เก็บจำนวนช่องกรอกชื่อใน Session State
     if "invitee_count" not in st.session_state:
