@@ -1,14 +1,13 @@
-import io
 import urllib.parse
-from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ตั้งค่าหน้าตาเว็บ
 st.set_page_config(
     page_title="Hangout Planner", page_icon="🍻", layout="centered"
 )
 
-# Custom CSS จัดสไตล์ข้อความ
+# Custom CSS จัดสไตล์ข้อความและการ์ดตั๋ว
 st.markdown(
     """
     <style>
@@ -55,9 +54,10 @@ st.markdown(
         border-radius: 20px;
         text-align: center;
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        margin-top: 20px;
+        margin-top: 10px;
         margin-bottom: 15px;
         color: white;
+        font-family: sans-serif;
     }
     .ticket-header {
         font-size: 1.4rem;
@@ -91,52 +91,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-
-# ฟังก์ชันสร้างรูปภาพการ์ดตั๋วด้วย Python (Pillow)
-def generate_ticket_image(title, location, name, status, is_going):
-    width, height = 600, 420
-    # กำหนดสีพื้นหลัง (เขียวถ้าไป / แดงถ้าไม่ไป)
-    bg_color = (17, 153, 142) if is_going else (255, 65, 108)
-
-    img = Image.new("RGB", (width, height), color=bg_color)
-    draw = ImageDraw.Draw(img)
-
-    # วาดเส้นขอบในการ์ด
-    draw.rectangle([15, 15, width - 15, height - 15], outline="white", width=3)
-    draw.line([(30, 80), (width - 30, 80)], fill="white", width=2)
-
-    try:
-        font_large = ImageFont.truetype("arial.ttf", 28)
-        font_medium = ImageFont.truetype("arial.ttf", 22)
-    except Exception:
-        font_large = ImageFont.load_default()
-        font_medium = ImageFont.load_default()
-
-    # ข้อความบนการ์ด
-    draw.text((width // 2, 45), "HANGOUT PASS", fill="white", anchor="mm")
-    draw.text(
-        (width // 2, 130), f"Topic: {title}", fill="white", anchor="mm"
-    )
-    draw.text(
-        (width // 2, 180), f"Location: {location}", fill="white", anchor="mm"
-    )
-    draw.text((width // 2, 230), f"Guest: {name}", fill="white", anchor="mm")
-
-    # กล่องสถานะด้านล่าง
-    status_bg = (56, 239, 125) if is_going else (255, 75, 43)
-    draw.rectangle(
-        [50, 290, width - 50, 360], fill=status_bg, outline="white", width=2
-    )
-    draw.text((width // 2, 325), status, fill="white", anchor="mm")
-
-    # แปลงเป็น Bytes เพื่อให้ Streamlit ให้ดาวน์โหลด
-    img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format="PNG")
-    img_byte_arr = img_byte_arr.getvalue()
-
-    return img_byte_arr
-
 
 query_params = st.query_params
 title = query_params.get("title", None)
@@ -190,7 +144,6 @@ if title and location:
                     "name": guest_name,
                     "status": "✅ ไปแน่นอน! 🥳",
                     "color": "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-                    "is_going": True,
                 }
                 st.balloons()
             else:
@@ -203,7 +156,6 @@ if title and location:
                     "name": guest_name,
                     "status": "❌ ไม่สะดวกไป 🥲",
                     "color": "linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)",
-                    "is_going": False,
                 }
             else:
                 st.warning("กรุณากรอกชื่อก่อนกดตอบรับครับ")
@@ -212,9 +164,10 @@ if title and location:
     if "response" in st.session_state:
         res = st.session_state["response"]
 
+        # แสดงการ์ดตั๋วสวยงามบนหน้าเว็บ
         st.markdown(
             f"""
-        <div class="ticket-card" style="background: {res['color']};">
+        <div id="target-ticket" class="ticket-card" style="background: {res['color']};">
             <div class="ticket-header">🎟️ HANGOUT PASS</div>
             <div class="ticket-body">📌 <b>หัวข้อ:</b> {title}</div>
             <div class="ticket-body">📍 <b>สถานที่:</b> {location}</div>
@@ -225,18 +178,48 @@ if title and location:
             unsafe_allow_html=True,
         )
 
-        # สร้างรูปภาพสำหรับการดาวน์โหลด
-        img_bytes = generate_ticket_image(
-            title, location, res["name"], res["status"], res["is_going"]
-        )
+        # สคริปต์จับภาพการ์ดตั๋วโดยตรงจากหน้าจอหลักส่งออกเป็นไฟล์รูปภาพ
+        download_script = f"""
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <button id="btn-download" style="
+            width: 100%;
+            background-color: #0084FF;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            margin-top: 5px;">
+            ⬇️ บันทึกรูปภาพบัตรลงเครื่อง
+        </button>
+        <script>
+        document.getElementById("btn-download").addEventListener("click", function() {{
+            const target = window.parent.document.getElementById("target-ticket");
+            if(target) {{
+                html2canvas(target, {{ scale: 2, useCORS: true }}).then(canvas => {{
+                    const link = document.createElement("a");
+                    link.download = "hangout-pass-{res['name']}.png";
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                }});
+            }} else {{
+                alert("เกิดข้อผิดพลาดในการดึงรูปภาพ กรุณาลองแคปหน้าจอแทนครับ");
+            }}
+        }});
+        </script>
+        """
+        components.html(download_script, height=70)
 
-        # ปุ่มดาวน์โหลดอย่างเป็นทางการของ Streamlit
-        st.download_button(
-            label="⬇️ บันทึกรูปภาพบัตรลงเครื่อง",
-            data=img_bytes,
-            file_name=f"hangout-pass-{res['name']}.png",
-            mime="image/png",
-            use_container_width=True,
+        st.markdown(
+            """
+        <p style="font-size: 0.85rem; text-align: center; opacity: 0.8; margin-top: -10px;">
+            📸 กดบันทึกรูปภาพ หรือแคปหน้าจอรูปบัตรส่งให้ผู้เชิญได้เลย!
+        </p>
+        """,
+            unsafe_allow_html=True,
         )
 
 # ====================================================
