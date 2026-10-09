@@ -6,11 +6,10 @@ st.set_page_config(
     page_title="Hangout Planner", page_icon="🍻", layout="centered"
 )
 
-# Custom CSS จัดสไตล์ข้อความและช่องกรอกข้อมูล
+# Custom CSS จัดสไตล์ข้อความและการ์ดตั๋ว
 st.markdown(
     """
     <style>
-    /* จัด Title และ Header หลัก ให้อยู่ตรงกลาง */
     .main-header {
         text-align: center;
         font-size: 2.2rem;
@@ -20,8 +19,6 @@ st.markdown(
     .center-text {
         text-align: center;
     }
-    
-    /* สไตล์หัวข้อใหญ่เบิ้ม + ตัวหนา */
     .section-title-center {
         text-align: center;
         font-size: 1.8rem;
@@ -37,7 +34,40 @@ st.markdown(
         margin-bottom: 8px;
     }
     
-    /* จัดข้อความในช่องกรอก 1 และ 2 ให้อยู่ตรงกลาง */
+    /* สไตล์การ์ดตั๋วตอบรับ (Ticket Pass) */
+    .ticket-card {
+        padding: 24px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        margin-top: 20px;
+        margin-bottom: 15px;
+        color: white;
+    }
+    .ticket-header {
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        border-bottom: 2px dashed rgba(255,255,255,0.4);
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+    .ticket-body {
+        font-size: 1.15rem;
+        margin: 8px 0;
+        line-height: 1.6;
+    }
+    .ticket-status {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-top: 16px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: inline-block;
+        width: 100%;
+    }
+    
     div[data-testid="stTextInput"]:nth-of-type(1) input,
     div[data-testid="stTextInput"]:nth-of-type(2) input {
         text-align: center;
@@ -47,7 +77,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ดึงข้อมูลจาก URL Query Parameters
 query_params = st.query_params
 title = query_params.get("title", None)
 location = query_params.get("location", None)
@@ -78,7 +107,6 @@ if title and location:
 
     st.divider()
 
-    # ส่วนตอบรับของเพื่อน
     st.markdown("### ตอบรับการนัดหมาย")
     guest_name = st.text_input(
         "ใส่ชื่อของคุณก่อนกดตอบรับ:", placeholder="เช่น บอส, นัด"
@@ -90,19 +118,45 @@ if title and location:
             "✅ ไปแน่นอน!", use_container_width=True, type="primary"
         ):
             if guest_name:
+                st.session_state["response"] = {
+                    "name": guest_name,
+                    "status": "✅ ไปแน่นอน! 🥳",
+                    "color": "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                }
                 st.balloons()
-                st.success(
-                    f"เย้! บันทึกแล้วว่า **{guest_name}** ไปร่วมงานนี้ 🥳"
-                )
             else:
                 st.warning("กรุณากรอกชื่อก่อนกดตอบรับครับ")
 
     with col2:
         if st.button("❌ ไม่สะดวกไป", use_container_width=True):
             if guest_name:
-                st.info(f"เสียดายจัง ไว้เจอกันงานหน้านะ **{guest_name}** 🥲")
+                st.session_state["response"] = {
+                    "name": guest_name,
+                    "status": "❌ ไม่สะดวกไป 🥲",
+                    "color": "linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%)",
+                }
             else:
                 st.warning("กรุณากรอกชื่อก่อนกดตอบรับครับ")
+
+    # แสดงการ์ดตั๋วตอบรับเมื่อกดปุ่ม
+    if "response" in st.session_state:
+        res = st.session_state["response"]
+
+        st.markdown(
+            f"""
+        <div class="ticket-card" style="background: {res['color']};">
+            <div class="ticket-header">🎟️ HANGOUT PASS</div>
+            <div class="ticket-body">📌 <b>หัวข้อ:</b> {title}</div>
+            <div class="ticket-body">📍 <b>สถานที่:</b> {location}</div>
+            <div class="ticket-body">👤 <b>ผู้ตอบรับ:</b> {res['name']}</div>
+            <div class="ticket-status">{res['status']}</div>
+            <p style="font-size: 0.85rem; margin-top: 18px; opacity: 0.9;">
+                📸 แคปหน้าจอนี้ส่งให้ผู้เชิญในแชตได้เลย!
+            </p>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
 
 # ====================================================
 # MODE 2: ลิงก์สำหรับผู้สร้างกิจกรรม ( Organizer Mode )
@@ -113,7 +167,6 @@ else:
         unsafe_allow_html=True,
     )
 
-    # กล่องข้อความแจ้งเตือนตรงกลาง
     st.markdown(
         """
         <div style="background-color: #E8F4F8; padding: 12px; border-radius: 8px; text-align: center; color: #1E3A8A; font-weight: 500; margin-bottom: 25px;">
@@ -123,7 +176,6 @@ else:
         unsafe_allow_html=True,
     )
 
-    # 1. หัวข้อการนัดหมาย (ใหญ่เบิ้ม + ตัวหนา + ตรงกลาง)
     st.markdown(
         '<div class="section-title-center">หัวข้อการนัดหมาย</div>',
         unsafe_allow_html=True,
@@ -134,9 +186,8 @@ else:
         label_visibility="collapsed",
     )
 
-    st.write("")  # เว้นระยะ
+    st.write("")
 
-    # 2. สถานที่ / ร้าน (ใหญ่เบิ้ม + ตัวหนา + ตรงกลาง)
     st.markdown(
         '<div class="section-title-center">สถานที่ / ร้าน</div>',
         unsafe_allow_html=True,
@@ -149,19 +200,16 @@ else:
 
     st.divider()
 
-    # 3. รายชื่อผู้ถูกเชิญ (ใหญ่เบิ้ม + ตัวหนา + ชิดซ้าย)
     st.markdown(
         '<div class="section-title-left">รายชื่อผู้ถูกเชิญ</div>',
         unsafe_allow_html=True,
     )
 
-    # เก็บจำนวนช่องกรอกชื่อใน Session State
     if "invitee_count" not in st.session_state:
         st.session_state.invitee_count = 1
 
     invitee_names = []
 
-    # แสดงช่องกรอกชื่อตามจำนวนที่มี
     for i in range(st.session_state.invitee_count):
         name = st.text_input(
             f"คนที่ {i+1}",
@@ -172,7 +220,6 @@ else:
         if name.strip():
             invitee_names.append(name.strip())
 
-    # ปุ่มเพิ่ม / ลบ ช่องกรอกชื่อ
     col_add, col_remove = st.columns([1, 1])
     with col_add:
         if st.button("➕ เพิ่มรายชื่อ", use_container_width=True):
@@ -187,21 +234,18 @@ else:
 
     st.divider()
 
-    # ปุ่มสร้างลิงก์
     if st.button(
         "🔗 สร้างลิงก์สำหรับส่งให้เพื่อน",
         type="primary",
         use_container_width=True,
     ):
         if input_title and input_location:
-            # รวมรายชื่อที่กรอกคั่นด้วย comma
             combined_invitees = ", ".join(invitee_names)
 
             encoded_title = urllib.parse.quote(input_title)
             encoded_location = urllib.parse.quote(input_location)
             encoded_invitees = urllib.parse.quote(combined_invitees)
 
-            # โดเมนจริงของบอส
             base_url = "https://hangout-planner.streamlit.app"
             share_url = f"{base_url}/?title={encoded_title}&location={encoded_location}&invitees={encoded_invitees}"
 
