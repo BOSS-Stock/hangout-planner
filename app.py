@@ -34,6 +34,19 @@ st.markdown(
         margin-bottom: 8px;
     }
     
+    /* สไตล์ป้ายรายชื่อเพื่อนที่ถูกชวน (ใหญ่เบิ้ม + อ่านง่าย) */
+    .invitee-badge {
+        display: inline-block;
+        background-color: #E8F0FE;
+        color: #1A73E8;
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding: 8px 16px;
+        margin: 4px;
+        border-radius: 12px;
+        border: 1px solid #D2E3FC;
+    }
+    
     /* สไตล์การ์ดตั๋วตอบรับ (Ticket Pass) */
     .ticket-card {
         padding: 24px;
@@ -102,8 +115,16 @@ if title and location:
     if invitees:
         people_list = [p.strip() for p in invitees.split(",") if p.strip()]
         st.markdown("<br>", unsafe_allow_html=True)
-        st.write("👥 **เพื่อนๆ ที่ถูกชวน:**")
-        st.write(", ".join([f"`{p}`" for p in people_list]))
+        st.markdown(
+            "<p style='font-size: 1.3rem; font-weight: bold; margin-bottom: 8px;'>👥 เพื่อนๆ ที่ถูกชวน:</p>",
+            unsafe_allow_html=True,
+        )
+
+        # สร้างป้ายชื่อใหญ่แบบสวยงาม
+        badges_html = "".join(
+            [f'<span class="invitee-badge">👤 {p}</span>' for p in people_list]
+        )
+        st.markdown(badges_html, unsafe_allow_html=True)
 
     st.divider()
 
